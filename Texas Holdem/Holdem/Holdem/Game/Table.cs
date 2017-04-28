@@ -1,448 +1,288 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace TexasHoldem.Logic
 {
-    /// <summary>
-    /// this class controls the main activities of the poker game, such as dealer position,
-    /// paying blinds, dealing cards, which player is making a decision, starting new rounds,
-    /// showdowns
-    /// </summary>
     public class Table
     {
-        private PlayerList players = new PlayerList();
-        private Deck deck;
-        private Hand tableHand = new Hand();
-        private int roundCounter;
-        private Pot mainPot;
-        private List<Pot> sidePots;
-        private Random _rnd;
-        private int turnCount;
-        public string winnermessage;
-        //the blind class, containing the amount of blinds, the position of the player
-        //who must pay the blinds
-        private class Blind
-        {
-            private int amount;
-            public int position;
-            public int Amount
-            {
-                get
-                {
-                    return amount;
-                }
-                set
-                {
-                    amount = value;
-                }
-            }
-
-        }
-        Blind smallBlind, bigBlind;
-        //the index of the player who's the dealer
-        private int dealerPosition;
-        //the index of the current player who turn it is
-        private int currentIndex;
-        //various propeties
-        public int TurnCount
-        {
-            get { return turnCount; }
-            set { turnCount = value; }
-        }
-        public int SmallBlind
-        {
-            get { return smallBlind.Amount; }
-        }
-        public int BigBlind
-        {
-            get{return bigBlind.Amount;}
-        }
-        public int RoundCount
-        {
-            get { return roundCounter; }
-            set { roundCounter = value; }
-        }
-        /// <summary>
-        /// contructor to begin the game, dealer position (and big/small blind position) is randomly choosen
-        /// blinds are set to &500/1000 initially 
-        /// </summary>
-        /// <param name="players"></param>
-
+        #region Конструкторы
         public Table(PlayerList players, Random rnd)
         {
-            this.players = players;
-            deck = Deck.GetNewDeck();
+            this._players = players;
+            _deck = Deck.GetNewDeck();
             _rnd = rnd;
-            mainPot = new Pot();
-            sidePots = new List<Pot>();
-            smallBlind = new Blind();
-            bigBlind = new Blind();
-            roundCounter = 0;
-            turnCount = 0;
-            dealerPosition = _rnd.Next(players.Count);
-            //set blind amount and position
-            smallBlind.Amount = 500;
-            bigBlind.Amount = 1000;
-            mainPot.SmallBlind = 500;
-            mainPot.BigBlind = 1000;
-            smallBlind.position = dealerPosition + 1;
-            bigBlind.position = dealerPosition + 2;
-            currentIndex = dealerPosition;
-
-
+            _mainPot = new Pot();
+            _sidePots = new List<Pot>();
+            _smallBlind = new Blind();
+            _bigBlind = new Blind();
+            _iRoundCounter = 0;
+            _iTurnCount = 0;
+            _iDealerPosition = _rnd.Next(players.Count);
+            _smallBlind.Amount = 500;
+            _bigBlind.Amount = 1000;
+            _mainPot.SmallBlind = 500;
+            _mainPot.BigBlind = 1000;
+            _smallBlind.position = _iDealerPosition + 1;
+            _bigBlind.position = _iDealerPosition + 2;
+            _iCurrentIndex = _iDealerPosition;
         }        
-        //indexer of players
-        public Player this[int index]
-        {
-            get
-            {
-                return players.GetPlayer(ref index);
-            }
-            set
-            {
-                players[index] = value;
-            }
-        }
+        #endregion
 
-        //various getters/setters
-        public PlayerList getPlayers()
+        #region Методы
+        public bool BeginNextTurn()
         {
-            return players;
-        }
-        public int getDealerPosition()
-        {
-            return dealerPosition;
-        }
-        public int getCurrentIndex()
-        {
-            return currentIndex;
-        }
-        public void setCurrentIndex(int index)
-        {
-            currentIndex = index;
-        }
-        public string getSmallBlind()
-        {
-            return smallBlind.Amount.ToString();
-        }
-        public string getBigBlind()
-        {
-            return bigBlind.Amount.ToString();
-        }
-        public Pot getPot()
-        {
-            return mainPot;
-        }
-        public List<Pot> getSidePots()
-        {
-            return sidePots;
-        }
-        public Hand getCommunityCards()
-        {
-            return tableHand;
-        }
-        public Deck getDeck()
-        {
-            return deck;
-        }
-        /// <summary>
-        /// Remove a player when the player busts out.
-        /// </summary>
-        /// <param name="player"></param>
-        public void RemovePlayer(Player player)
-        {
-            if (player.ChipStack != 0)
-                throw new InvalidOperationException();
-            players.Remove(player);
-        }
-        public void RemovePlayer(int index)
-        {
-            if (players[index].ChipStack != 0)
-                throw new InvalidOperationException();
-            players.RemoveAt(index);
-        }
-        
-        
-        /// <summary>
-        /// Start a new round, dealer/smallblind position are moved up one spot
-        /// players/counter variables are reset
-        /// blinds are reset if necessary.
-        /// </summary>
-        public void StartNextRound()
-        {
-            players.ResetPlayers();
-            deck = Deck.GetNewDeck();
-            if (roundCounter == 10)
+            _iTurnCount++;
+            while (_players[_mainPot.AgressorIndex].Folded && _iCurrentIndex != _mainPot.AgressorIndex)
             {
-                roundCounter = 0;
-                smallBlind.Amount *= 2;
-                bigBlind.Amount = smallBlind.Amount * 2;
-                mainPot.SmallBlind = SmallBlind;
-                mainPot.BigBlind = BigBlind;
+                _mainPot.AgressorIndex = DecrementIndex(_mainPot.AgressorIndex);
             }
-            if (roundCounter != 0)
+            if (_iCurrentIndex == _mainPot.AgressorIndex && _iTurnCount > 1)
             {
-                dealerPosition = incrementIndex(dealerPosition);
-                smallBlind.position = incrementIndex(dealerPosition);
-                bigBlind.position = incrementIndex(smallBlind.position);
-            }
-            roundCounter++;
-            mainPot.Amount = 0;
-            mainPot.AgressorIndex = -1;
-            mainPot.MinimumRaise = bigBlind.Amount;
-            tableHand.Clear();
-            currentIndex = dealerPosition;
-            winnermessage = null;
-            mainPot.getPlayersInPot().Clear();
-            sidePots.Clear();
-        }
-
-
-        /// <summary>
-        /// Determine when the current betting round is over
-        /// </summary>
-        /// <returns></returns>
-        public bool beginNextTurn()
-        {
-            turnCount++;
-            while (players[mainPot.AgressorIndex].Folded && currentIndex!=mainPot.AgressorIndex)
-                mainPot.AgressorIndex = decrementIndex(mainPot.AgressorIndex);
-            if (currentIndex == mainPot.AgressorIndex && turnCount > 1)
                 return false;
+            }
             else if (EveryoneAllIn())
+            {
                 return false;
+            }
             else
+            {
                 return true;
+            }
         }
-        //method to determine if every player has already went all in
         public bool EveryoneAllIn()
         {
             int zeroCount = 0;
             int totalCount = 0;
-            for (int i = 0; i < getPlayers().Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
                 if (this[i]._bBusted || this[i].Folded)
+                {
                     continue;
+                }
                 if (this[i].ChipStack == 0)
+                {
                     zeroCount++;
+                }
                 totalCount++;
             }
-            if (zeroCount != 0 && totalCount==zeroCount)
+            if (zeroCount != 0 && totalCount == zeroCount)
+            {
                 return true;
+            }
             else if (totalCount - zeroCount == 1)
             {
-                for (int i = 0; i < getPlayers().Count; i++)
+                for (int i = 0; i < Players.Count; i++)
                 {
                     if (this[i]._bBusted || this[i].Folded)
+                    {
                         continue;
-                    if (this[i].ChipStack != 0 && this[i].GetAmountToCall(mainPot) == 0)
+                    }
+                    if (this[i].ChipStack != 0 && this[i].GetAmountToCall(_mainPot) == 0)
+                    {
                         return true;
+                    }
                 }
             }
             return false;
         }
-        
-        /// <summary>
-        /// increment index, skipping folded players, busted players and supports 
-        ///wrapping around classes
-        /// </summary>
-        /// <param name="currentIndex"></param>
-        /// <returns></returns>
-        public int incrementIndex(int currentIndex)
+        public int IncrementIndex(int currentIndex)
         {
             currentIndex++;
-            while (players.GetPlayer(ref currentIndex).Folded || players.GetPlayer(ref currentIndex)._bBusted||players.GetPlayer(ref currentIndex).ChipStack==0)
+            while (_players.GetPlayer(ref currentIndex).Folded || _players.GetPlayer(ref currentIndex)._bBusted
+                || _players.GetPlayer(ref currentIndex).ChipStack == 0)
+            {
                 currentIndex++;
-            players.GetPlayer(ref currentIndex);
+            }
+            _players.GetPlayer(ref currentIndex);
             return currentIndex;
         }
-        //increment index, not skipping players with a chipstack of zero
-        public int incrementIndexShowdown(int currentIndex)
+        public int IncrementIndexShowdown(int currentIndex)
         {
             currentIndex++;
-            while (players.GetPlayer(ref currentIndex).Folded || players.GetPlayer(ref currentIndex)._bBusted)
+            while (_players.GetPlayer(ref currentIndex).Folded || _players.GetPlayer(ref currentIndex)._bBusted)
+            {
                 currentIndex++;
-            players.GetPlayer(ref currentIndex);
+            }
+            _players.GetPlayer(ref currentIndex);
             return currentIndex;
         }
-        //same as increment class except in the other direction
-        public int decrementIndex(int currentIndex)
+        public int DecrementIndex(int currentIndex)
         {
             currentIndex--;
-            while (players.GetPlayer(ref currentIndex).Folded || players.GetPlayer(ref currentIndex)._bBusted || players.GetPlayer(ref currentIndex).ChipStack == 0)
+            while (_players.GetPlayer(ref currentIndex).Folded || _players.GetPlayer(ref currentIndex)._bBusted
+                || _players.GetPlayer(ref currentIndex).ChipStack == 0)
+            {
                 currentIndex--;
-            players.GetPlayer(ref currentIndex);
+            }
+            _players.GetPlayer(ref currentIndex);
             return currentIndex;
         }
-
-        //deal two unique cards to all players
         public void DealHoleCards()
         {
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < _players.Count; i++)
             {
                 if (i == 0)
                 {
-                    players[i].AddToHand(deck.Deal(true));
-                    players[i].AddToHand(deck.Deal(true));
+                    _players[i].AddToHand(_deck.Deal(true));
+                    _players[i].AddToHand(_deck.Deal(true));
                 }
                 else
                 {
-                    players[i].AddToHand(deck.Deal(false));
-                    players[i].AddToHand(deck.Deal(false));
+                    _players[i].AddToHand(_deck.Deal(false));
+                    _players[i].AddToHand(_deck.Deal(false));
                 }
-
             }
         }
-        //pay small/big blind amount
         public void PaySmallBlind()
         {
-            players.GetPlayer(ref smallBlind.position).PaySmallBlind(smallBlind.Amount, mainPot,currentIndex);
-            currentIndex = smallBlind.position;
+            _players.GetPlayer(ref _smallBlind.position).PaySmallBlind(_smallBlind.Amount, _mainPot, _iCurrentIndex);
+            _iCurrentIndex = _smallBlind.position;
         }
         public void PayBigBlind()
         {
-            players.GetPlayer(ref bigBlind.position).PayBigBlind(bigBlind.Amount, mainPot, currentIndex);
-            currentIndex = bigBlind.position;
-            turnCount = 0;
+            _players.GetPlayer(ref _bigBlind.position).PayBigBlind(_bigBlind.Amount, _mainPot, _iCurrentIndex);
+            _iCurrentIndex = _bigBlind.position;
+            _iTurnCount = 0;
         }
-        //deal the flop
         public void DealFlop()
         {
-            tableHand.Add(deck.Deal(true));
-            tableHand.Add(deck.Deal(true));
-            tableHand.Add(deck.Deal(true));
-            for (int i = 0; i < players.Count; i++)
+            _tableHand.Add(_deck.Deal(true));
+            _tableHand.Add(_deck.Deal(true));
+            _tableHand.Add(_deck.Deal(true));
+            for (int i = 0; i < _players.Count; i++)
             {
-                players[i].AddToHand(tableHand);
+                _players[i].AddToHand(_tableHand);
             }
         }
-        //deal the turn
         public void DealTurn()
         {
-            Card turn = deck.Deal(true);
-            tableHand.Add(turn);
-            for (int i = 0; i < players.Count; i++)
+            Card turn = _deck.Deal(true);
+            _tableHand.Add(turn);
+            for (int i = 0; i < _players.Count; i++)
             {
-                players[i].AddToHand(turn);
+                _players[i].AddToHand(turn);
             }
         }
-        //deal the river
         public void DealRiver()
         {
-            Card river = deck.Deal(true);
-            tableHand.Add(river);
-            for (int i = 0; i < players.Count; i++)
+            Card river = _deck.Deal(true);
+            _tableHand.Add(river);
+            for (int i = 0; i < _players.Count; i++)
             {
-                players[i].AddToHand(river);
+                _players[i].AddToHand(river);
             }
         }
-        //showdown code!
         public void ShowDown()
         {
-            //creating sidepots
             if (CreateSidePots())
             {
-                mainPot.getPlayersInPot().Sort();
-                
-                for (int i = 0; i < mainPot.getPlayersInPot().Count - 1; i++)
+                _mainPot.PlayersInPot.Sort();
+                for (int i = 0; i < _mainPot.PlayersInPot.Count - 1; i++)
                 {
-                    if (mainPot.getPlayersInPot()[i].AmountInPot != mainPot.getPlayersInPot()[i + 1].AmountInPot)
+                    if (_mainPot.PlayersInPot[i].AmountInPot != _mainPot.PlayersInPot[i + 1].AmountInPot)
                     {
                         PlayerList tempPlayers = new PlayerList();
-                        for (int j = mainPot.getPlayersInPot().Count - 1; j > i; j--)
+                        for (int j = _mainPot.PlayersInPot.Count - 1; j > i; j--)
                         {
-                            tempPlayers.Add(mainPot.getPlayersInPot()[j]);
+                            tempPlayers.Add(_mainPot.PlayersInPot[j]);
                         }
-                        int potSize = (mainPot.getPlayersInPot()[i + 1].AmountInPot - mainPot.getPlayersInPot()[i].AmountInPot) * tempPlayers.Count;
-                        mainPot.Amount -= potSize;
-                        sidePots.Add(new Pot(potSize, tempPlayers));
+                        int potSize = (_mainPot.PlayersInPot[i + 1].AmountInPot - _mainPot.PlayersInPot[i].AmountInPot) * tempPlayers.Count;
+                        _mainPot.Amount -= potSize;
+                        _sidePots.Add(new Pot(potSize, tempPlayers));
                     }
                 }
             }
-            //awarding mainpot
             PlayerList bestHandList = new PlayerList();
             List<int> Winners = new List<int>();
-            bestHandList = QuickSortBestHand(new PlayerList(mainPot.getPlayersInPot()));
+            bestHandList = SortBestHand(new PlayerList(_mainPot.PlayersInPot));
             for (int i = 0; i < bestHandList.Count; i++)
             {
-                for (int j = 0; j < this.getPlayers().Count; j++)
-                    if (players[j] == bestHandList[i])
+                for (int j = 0; j < this.Players.Count; j++)
+                {
+                    if (_players[j] == bestHandList[i])
                     {
                         Winners.Add(j);
                     }
-                if (HandCombination.EvaluateHand(new Hand(bestHandList[i].Hand)) != HandCombination.EvaluateHand(new Hand(bestHandList[i + 1].Hand)))
+                }
+                if (HandCombination.EvaluateHand(new Hand(bestHandList[i].Hand))
+                    != HandCombination.EvaluateHand(new Hand(bestHandList[i + 1].Hand)))
+                {
                     break;
+                }
             }
-            mainPot.Amount /= Winners.Count;
+            _mainPot.Amount /= Winners.Count;
             if (Winners.Count > 1)
             {
-                for (int i = 0; i < this.getPlayers().Count; i++)
+                for (int i = 0; i < this.Players.Count; i++)
                 {
                     if (Winners.Contains(i))
                     {
-                        currentIndex = i;
-                        players[i].CollectMoney(mainPot);
-                        winnermessage += players[i].Name + ", ";
+                        _iCurrentIndex = i;
+                        _players[i].CollectMoney(_mainPot);
+                        _strWinnerMessage += _players[i].Name + ", ";
                     }
                 }
-                winnermessage +=Environment.NewLine+ " split the pot.";
+                _strWinnerMessage += Environment.NewLine + " split the pot.";
             }
             else
             {
-                currentIndex = Winners[0];
-                players[currentIndex].CollectMoney(mainPot);
-                winnermessage = players[currentIndex].Message;
+                _iCurrentIndex = Winners[0];
+                _players[_iCurrentIndex].CollectMoney(_mainPot);
+                _strWinnerMessage = _players[_iCurrentIndex].Message;
             }
-            //awarding sidepots
-            for (int i = 0; i < sidePots.Count; i++)
+            for (int i = 0; i < _sidePots.Count; i++)
             {
                 List<int> sidePotWinners = new List<int>();
                 for (int x = 0; x < bestHandList.Count; x++)
                 {
-                    for (int j = 0; j < this.getPlayers().Count; j++)
-                        if (players[j] == bestHandList[x]&&sidePots[i].getPlayersInPot().Contains(bestHandList[x]))
+                    for (int j = 0; j < this.Players.Count; j++)
+                    {
+                        if (_players[j] == bestHandList[x] && _sidePots[i].PlayersInPot.Contains(bestHandList[x]))
                         {
                             sidePotWinners.Add(j);
                         }
-                    if (HandCombination.EvaluateHand(new Hand(bestHandList[x].Hand)) != HandCombination.EvaluateHand(new Hand(bestHandList[x + 1].Hand)) && sidePotWinners.Count != 0)
+                    }
+                    if (HandCombination.EvaluateHand(new Hand(bestHandList[x].Hand))
+                        != HandCombination.EvaluateHand(new Hand(bestHandList[x + 1].Hand))
+                        && sidePotWinners.Count != 0)
+                    {
                         break;
+                    }
                 }
-                sidePots[i].Amount /= sidePotWinners.Count;
-                for (int j = 0; j < this.getPlayers().Count; j++)
+                _sidePots[i].Amount /= sidePotWinners.Count;
+                for (int j = 0; j < this.Players.Count; j++)
                 {
                     if (sidePotWinners.Contains(j))
                     {
-                        currentIndex = j;
-                        players[j].CollectMoney(sidePots[i]);
+                        _iCurrentIndex = j;
+                        _players[j].CollectMoney(_sidePots[i]);
                     }
                 }
             }
         }
-        //check if it is necessary to create sidepots
         private bool CreateSidePots()
         {
-            for(int i=0;i<mainPot.getPlayersInPot().Count()-1;i++)
+            for (int i = 0; i < _mainPot.PlayersInPot.Count() - 1; i++)
             {
-                if (mainPot.getPlayersInPot()[i].AmountInPot != mainPot.getPlayersInPot()[i + 1].AmountInPot)
+                if (_mainPot.PlayersInPot[i].AmountInPot != _mainPot.PlayersInPot[i + 1].AmountInPot)
+                {
                     return true;
+                }
             }
             return false;
         }
-        PlayerList QuickSortBestHand(PlayerList myPlayers)
+        private PlayerList SortBestHand(PlayerList myPlayers)
         {
             Player pivot;
-            Random ran = new Random();
-
             if (myPlayers.Count() <= 1)
+            {
                 return myPlayers;
-            pivot = myPlayers[ran.Next(myPlayers.Count())];
+            }
+            pivot = myPlayers[_rnd.Next(myPlayers.Count())];
             myPlayers.Remove(pivot);
-
             var less = new PlayerList();
             var greater = new PlayerList();
-            // Assign values to less or greater list
             foreach (Player player in myPlayers)
             {
                 if (HandCombination.EvaluateHand(new Hand(player.Hand)) > HandCombination.EvaluateHand(new Hand(pivot.Hand)))
@@ -454,32 +294,190 @@ namespace TexasHoldem.Logic
                     less.Add(player);
                 }
             }
-            // Recurse for less and greaterlists
             var list = new PlayerList();
-            list.AddRange(QuickSortBestHand(greater));
+            list.AddRange(SortBestHand(greater));
             list.Add(pivot);
-            list.AddRange(QuickSortBestHand(less));
+            list.AddRange(SortBestHand(less));
             return list;
         }
-        //check if everyone has folded except the player
         public bool PlayerWon()
         {
-            if (mainPot.getPlayersInPot().Count == 1)
+            if (_mainPot.PlayersInPot.Count == 1)
             {
                 foreach (Player player in this)
                 {
                     if (player._bBusted)
+                    {
                         continue;
+                    }
                     if (player.Folded)
+                    {
                         return true;
+                    }
                 }
             }
             return false;
         }
-        //support for "foreach" loops
         public IEnumerator<Player> GetEnumerator()
         {
-            return players.GetEnumerator();
+            return _players.GetEnumerator();
+        }
+        public void StartNextRound()
+        {
+            _players.ResetPlayers();
+            _deck = Deck.GetNewDeck();
+            if (_iRoundCounter == 10)
+            {
+                _iRoundCounter = 0;
+                _smallBlind.Amount *= 2;
+                _bigBlind.Amount = _smallBlind.Amount * 2;
+                _mainPot.SmallBlind = SmallBlind;
+                _mainPot.BigBlind = BigBlind;
+            }
+            if (_iRoundCounter != 0)
+            {
+                _iDealerPosition = IncrementIndex(_iDealerPosition);
+                _smallBlind.position = IncrementIndex(_iDealerPosition);
+                _bigBlind.position = IncrementIndex(_smallBlind.position);
+            }
+            _iRoundCounter++;
+            _mainPot.Amount = 0;
+            _mainPot.AgressorIndex = -1;
+            _mainPot.MinimumRaise = _bigBlind.Amount;
+            _tableHand.Clear();
+            _iCurrentIndex = _iDealerPosition;
+            _strWinnerMessage = null;
+            _mainPot.PlayersInPot.Clear();
+            _sidePots.Clear();
+        }
+        #endregion
+
+        #region Свойства
+        public string WinnerMessage
+        {
+            get
+            {
+                return _strWinnerMessage;
+            }
+        }
+        public int TurnCount
+        {
+            get 
+            { 
+                return _iTurnCount;
+            }
+            set 
+            { 
+                _iTurnCount = value;
+            }
+        }
+        public int SmallBlind
+        {
+            get 
+            { 
+                return _smallBlind.Amount;
+            }
+        }
+        public int BigBlind
+        {
+            get 
+            { 
+                return _bigBlind.Amount;
+            }
+        }
+        public int RoundCount
+        {
+            get 
+            { 
+                return _iRoundCounter;
+            }
+            set 
+            { 
+                _iRoundCounter = value;
+            }
+        }
+        public Player this[int index]
+        {
+            get
+            {
+                return _players.GetPlayer(ref index);
+            }
+            set
+            {
+                _players[index] = value;
+            }
+        }
+        public int CurrentIndex
+        {
+            get
+            {
+                return _iCurrentIndex;
+            }
+            set
+            {
+                _iCurrentIndex = value;
+            }
+        }
+        public PlayerList Players
+        {
+            get
+            {
+                return _players;
+            }
+        }
+        public Pot Pot
+        { 
+            get
+            {
+                return _mainPot;
+            }
+        }
+        public int DealerPosition
+        {
+            get
+            {
+                return _iDealerPosition;
+            }
+        }
+        public Hand CommunityCards
+        {
+            get
+            {
+                return _tableHand;
+            }
+        }
+        #endregion
+
+        #region Поля
+        private PlayerList _players = new PlayerList();
+        private Deck _deck;
+        private Hand _tableHand = new Hand();
+        private int _iRoundCounter;
+        private Pot _mainPot;
+        private List<Pot> _sidePots;
+        private Random _rnd;
+        private int _iTurnCount;
+        private string _strWinnerMessage;
+        private Blind _smallBlind;
+        private Blind _bigBlind;
+        private int _iDealerPosition;
+        private int _iCurrentIndex;
+        #endregion
+        private struct Blind
+        {
+            private int _amount;
+            public int position;
+            public int Amount
+            {
+                get
+                {
+                    return _amount;
+                }
+                set
+                {
+                    _amount = value;
+                }
+            }
         }
     }
 }

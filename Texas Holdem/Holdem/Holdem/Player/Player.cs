@@ -33,7 +33,7 @@ namespace TexasHoldem.Logic
         #region Методы
         public int GetAmountToCall(Pot mainPot)
         {
-            return mainPot.getMaximumAmountPutIn() - _iAmountInPot;
+            return mainPot.MaximumAmount - _iAmountInPot;
         }
         public void AddToHand(Hand hand)
         {
@@ -54,7 +54,7 @@ namespace TexasHoldem.Logic
             _iAmountInPot += amount;
             mainPot.Add(amount);
             mainPot.AddPlayer(this);
-            mainPot.setMaximumAmount(_iAmountInPot);
+            mainPot.MaximumAmount = _iAmountInPot;
             mainPot.MinimumRaise = amount;
             Message = this.Name + " pays the small blind";
             SimplifiedMessage = "SMALL BLIND " + amount;
@@ -71,7 +71,7 @@ namespace TexasHoldem.Logic
             _iAmountInPot += amount;
             mainPot.Add(amount);
             mainPot.AddPlayer(this);
-            mainPot.setMaximumAmount(_iAmountInPot);
+            mainPot.MaximumAmount = _iAmountInPot;
             mainPot.MinimumRaise = amount;
             Message = this.Name + " pays the big blind";
             SimplifiedMessage = "BIG BLIND " + amount;
@@ -81,7 +81,7 @@ namespace TexasHoldem.Logic
         {
 
             _bFolded = true;
-            mainPot.getPlayersInPot().Remove(this);
+            mainPot.PlayersInPot.Remove(this);
             Message = "Fold";
             SimplifiedMessage = "FOLDED";
 
@@ -94,7 +94,7 @@ namespace TexasHoldem.Logic
         public void Call(Pot mainPot)
         {
 
-            int amount = mainPot.getMaximumAmountPutIn() - _iAmountInPot;
+            int amount = mainPot.MaximumAmount - _iAmountInPot;
             if (ChipStack <= amount)
             {
                 AllIn(mainPot);
@@ -109,7 +109,7 @@ namespace TexasHoldem.Logic
         }
         public void Raise(int raise, Pot mainPot, int index)
         {
-            int amount = mainPot.getMaximumAmountPutIn() + raise - _iAmountInPot;
+            int amount = mainPot.MaximumAmount + raise - _iAmountInPot;
             if (ChipStack <= amount)
             {
                 AllIn(mainPot, index);
@@ -118,7 +118,7 @@ namespace TexasHoldem.Logic
             ChipStack -= amount;
             _iAmountInPot += amount;
             mainPot.Add(amount);
-            mainPot.setMaximumAmount(_iAmountInPot);
+            mainPot.MaximumAmount = _iAmountInPot;
             mainPot.AddPlayer(this);
             mainPot.MinimumRaise = raise;
             Message = "Call " + (amount - raise).ToString("c0") + " and raise " + raise.ToString("c0");
@@ -135,7 +135,7 @@ namespace TexasHoldem.Logic
             ChipStack -= bet;
             _iAmountInPot += bet;
             mainPot.Add(bet);
-            mainPot.setMaximumAmount(_iAmountInPot);
+            mainPot.MaximumAmount = _iAmountInPot;
             mainPot.MinimumRaise = bet;
             Message = "Bet " + bet.ToString("c0");
             SimplifiedMessage = "BET " + bet;
@@ -154,13 +154,17 @@ namespace TexasHoldem.Logic
                 mainPot.MinimumAllInAmount = ChipStack;
             }
             if (ChipStack > mainPot.MinimumRaise)
+            { 
                 mainPot.MinimumRaise = ChipStack;
+            }
             mainPot.AddPlayer(this);
             mainPot.Add(ChipStack);
             _iAmountInPot += ChipStack;
             ChipStack = 0;
-            if (_iAmountInPot > mainPot.getMaximumAmountPutIn())
-                mainPot.setMaximumAmount(_iAmountInPot);
+            if (_iAmountInPot > mainPot.MaximumAmount)
+            { 
+                mainPot.MaximumAmount = _iAmountInPot;
+            }
             Message = "I'm All-In";
             SimplifiedMessage = "ALL IN";
         }
@@ -177,13 +181,17 @@ namespace TexasHoldem.Logic
                 mainPot.MinimumAllInAmount = ChipStack;
             }
             if (ChipStack > mainPot.MinimumRaise)
+            { 
                 mainPot.MinimumRaise = ChipStack;
+            }
             mainPot.AddPlayer(this);
             mainPot.Add(ChipStack);
             _iAmountInPot += ChipStack;
             ChipStack = 0;
-            if (_iAmountInPot > mainPot.getMaximumAmountPutIn())
-                mainPot.setMaximumAmount(_iAmountInPot);
+            if (_iAmountInPot > mainPot.MaximumAmount)
+            { 
+                mainPot.MaximumAmount = _iAmountInPot;
+            }
             Message = "I'm All-In";
             SimplifiedMessage = "ALL IN";
             mainPot.AgressorIndex = index;
@@ -224,12 +232,21 @@ namespace TexasHoldem.Logic
         #region Свойства
         public string Name
         {
-            get { return _strName; }
-            set { _strName = value; }
+            get 
+            { 
+                return _strName; 
+            }
+            set 
+            { 
+                _strName = value;
+            }
         }
         public int ChipStack
         {
-            get { return _iChipStack; }
+            get 
+            { 
+                return _iChipStack;
+            }
             set
             {
                 if (value < 0)
@@ -240,8 +257,14 @@ namespace TexasHoldem.Logic
         }
         public int AmountContributed
         {
-            get { return _iAmountContributed; }
-            set { _iAmountContributed = value; }
+            get 
+            { 
+                return _iAmountContributed;
+            }
+            set 
+            { 
+                _iAmountContributed = value;
+            }
         }
         public string Message
         {
@@ -268,7 +291,10 @@ namespace TexasHoldem.Logic
         }
         public int InitialStack
         {
-            get { return _iInitialStack; }
+            get 
+            { 
+                return _iInitialStack;
+            }
             set
             {
                 if (value < 0)
@@ -278,7 +304,10 @@ namespace TexasHoldem.Logic
         }
         public int AmountInPot
         {
-            get { return _iAmountInPot; }
+            get 
+            { 
+                return _iAmountInPot;
+            }
             set
             {
                 if (value < 0)

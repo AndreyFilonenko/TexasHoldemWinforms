@@ -115,7 +115,7 @@ namespace TexasHoldem.UI
         private void SetDrawingPositions()
         {
             int holeHeight = Convert.ToInt32((60f / 768f) * screenHeight);
-            for (int i = 0; i < _pokerTable.getPlayers().Count; i++)
+            for (int i = 0; i < _pokerTable.Players.Count; i++)
             {
                 _holeCardPosition.Add(new Rectangle(_panelList[i].Location.X + Convert.ToInt32((18f / 1366f) * screenWidth), _panelList[i].Location.Y - holeHeight, cardWidth, cardHeight));
                 _holeCardPosition.Add(new Rectangle(_panelList[i].Location.X + Convert.ToInt32((87f / 1366f) * screenWidth), _panelList[i].Location.Y - holeHeight, cardWidth, cardHeight));
@@ -130,26 +130,26 @@ namespace TexasHoldem.UI
         private void DrawToScreen()
         {
             _g.Clear(Color.Transparent);
-            for (int i = 0; i < _pokerTable.getPlayers().Count * 2; i++)
+            for (int i = 0; i < _pokerTable.Players.Count * 2; i++)
             {
                 if (_pokerTable[i / 2]._bBusted)
                     continue;
                 _g.DrawImage(_pokerTable[i / 2].Hand[i % 2].getImage(), _holeCardPosition[i]);
             }
-            pbDealer.Location = new Point(_panelList[_pokerTable.getDealerPosition()].Location.X - Convert.ToInt32(60 * width_ratio), _panelList[_pokerTable.getDealerPosition()].Location.Y - Convert.ToInt32(15 * height_ratio));
+            pbDealer.Location = new Point(_panelList[_pokerTable.DealerPosition].Location.X - Convert.ToInt32(60 * width_ratio), _panelList[_pokerTable.DealerPosition].Location.Y - Convert.ToInt32(15 * height_ratio));
 
             if (_pokerTable[0].Hand.Count > 2)
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    _g.DrawImage(_pokerTable.getCommunityCards()[i].getImage(), _flopPositions[i]);
+                    _g.DrawImage(_pokerTable.CommunityCards[i].getImage(), _flopPositions[i]);
                 }
 
                 if (_pokerTable[0].Hand.Count > 5)
                 {
-                    _g.DrawImage(_pokerTable.getCommunityCards()[3].getImage(), _turnPosition);
+                    _g.DrawImage(_pokerTable.CommunityCards[3].getImage(), _turnPosition);
                     if (_pokerTable[0].Hand.Count > 6)
-                        _g.DrawImage(_pokerTable.getCommunityCards()[4].getImage(), _riverPosition);
+                        _g.DrawImage(_pokerTable.CommunityCards[4].getImage(), _riverPosition);
                 }
             }
             pbMain.Image = _bitmap;
@@ -176,7 +176,7 @@ namespace TexasHoldem.UI
                 return;
             }
             HideControls();
-            for (int i = 0; i < _pokerTable.getPlayers().Count; i++)
+            for (int i = 0; i < _pokerTable.Players.Count; i++)
             {
                 if (_pokerTable[i].Folded)
                 {
@@ -195,7 +195,7 @@ namespace TexasHoldem.UI
             _pokerTable.DealHoleCards();
             DrawToScreen();
             UpdateMove();
-            lblBubble.Text = _pokerTable[_pokerTable.getCurrentIndex()].Name + " is the dealer";
+            lblBubble.Text = _pokerTable[_pokerTable.CurrentIndex].Name + " is the dealer";
             timerNextMove.Start();
         }
         private bool PlayerBustedOut()
@@ -213,7 +213,7 @@ namespace TexasHoldem.UI
         }
         private void HideControls()
         {
-            for (int i = 0; i < _pokerTable.getPlayers().Count; i++)
+            for (int i = 0; i < _pokerTable.Players.Count; i++)
             {
                 if (_pokerTable[i]._bBusted)
                 {
@@ -228,7 +228,7 @@ namespace TexasHoldem.UI
         {
             if (!_pokerTable[0]._bBusted)
             {
-                for (int i = 1; i < _pokerTable.getPlayers().Count; i++)
+                for (int i = 1; i < _pokerTable.Players.Count; i++)
                 {
                     if (!_pokerTable[i]._bBusted)
                         return 0;
@@ -239,12 +239,11 @@ namespace TexasHoldem.UI
         }
         private void UpdateMove()
         {
-            //changes panelbubble position and text
             panelBubble.Show();
-            panelBubble.Location = new Point(_panelList[_pokerTable.getCurrentIndex()].Location.X + Convert.ToInt32(176 * width_ratio), _panelList[_pokerTable.getCurrentIndex()].Location.Y - Convert.ToInt32(80 * width_ratio));
-            lblBubble.Text = _pokerTable[_pokerTable.getCurrentIndex()].Message;
+            panelBubble.Location = new Point(_panelList[_pokerTable.CurrentIndex].Location.X + Convert.ToInt32(176 * width_ratio), _panelList[_pokerTable.CurrentIndex].Location.Y - Convert.ToInt32(80 * width_ratio));
+            lblBubble.Text = _pokerTable[_pokerTable.CurrentIndex].Message;
             lblPot.Text = "Blinds: $" + _pokerTable.SmallBlind.ToString() + "/" + _pokerTable.BigBlind.ToString()
-                + Environment.NewLine + "Amount in pot: " + _pokerTable.getPot().Amount.ToString();
+                + Environment.NewLine + "Amount in pot: " + _pokerTable.Pot.Amount.ToString();
         }
         private void SetBetAmounts(int minimum, int maximum)
         {
@@ -274,17 +273,17 @@ namespace TexasHoldem.UI
         {
             btnAllIn.Show();
             btnFold.Show();
-            if (_pokerTable.getPlayers()[0].GetAmountToCall(_pokerTable.getPot()) <= _pokerTable.getPlayers()[0].ChipStack)
+            if (_pokerTable.Players[0].GetAmountToCall(_pokerTable.Pot) <= _pokerTable.Players[0].ChipStack)
             {
                 btnCheck.Show();
 
             }
-            if (_pokerTable.getPot().MinimumRaise <= _pokerTable.getPlayers()[0].ChipStack)
+            if (_pokerTable.Pot.MinimumRaise <= _pokerTable.Players[0].ChipStack)
             {
                 btnRaise.Show();
             }
             panelBubble.Hide();
-            int amountToCall = _pokerTable[_pokerTable.getCurrentIndex()].GetAmountToCall(_pokerTable.getPot());
+            int amountToCall = _pokerTable[_pokerTable.CurrentIndex].GetAmountToCall(_pokerTable.Pot);
             if (amountToCall != 0)
             {
                 btnCheck.Text = "Call " + amountToCall.ToString();
@@ -308,10 +307,10 @@ namespace TexasHoldem.UI
         private void timerBusted_Tick(object sender, EventArgs e)
         {
             lblBanner.Hide();
-            if (bustedIndex >= _pokerTable.getPlayers().Count)
+            if (bustedIndex >= _pokerTable.Players.Count)
             {
                 timerBusted.Stop();
-                _pokerTable.setCurrentIndex(_pokerTable.getDealerPosition());
+                _pokerTable.CurrentIndex = _pokerTable.DealerPosition;
                 bustedIndex = 0;
                 RoundStart();
                 return;
@@ -319,16 +318,16 @@ namespace TexasHoldem.UI
             while (_pokerTable[bustedIndex].ChipStack != 0 || _pokerTable[bustedIndex]._bBusted)
             {
                 bustedIndex++;
-                if (bustedIndex >= _pokerTable.getPlayers().Count)
+                if (bustedIndex >= _pokerTable.Players.Count)
                 {
                     timerBusted.Stop();
-                    _pokerTable.setCurrentIndex(_pokerTable.getDealerPosition());
+                    _pokerTable.CurrentIndex = _pokerTable.DealerPosition;
                     bustedIndex = 0;
                     RoundStart();
                     return;
                 }
             }
-            _pokerTable.setCurrentIndex(bustedIndex);
+            _pokerTable.CurrentIndex = bustedIndex;
             _pokerTable[bustedIndex].Leave();
             UpdateMove();
             bustedIndex++;
@@ -383,7 +382,7 @@ namespace TexasHoldem.UI
         }
         private void btnFold_Click(object sender, EventArgs e)
         {
-            _pokerTable[0].Fold(_pokerTable.getPot());
+            _pokerTable[0].Fold(_pokerTable.Pot);
             UpdateMove();
             HideButtons();
             panelPlayer.BackgroundImage = Image.FromFile("inactivebutton.png");
@@ -391,13 +390,13 @@ namespace TexasHoldem.UI
         }
         private void btnCheck_Click(object sender, EventArgs e)
         {
-            if (_pokerTable[_pokerTable.getCurrentIndex()].GetAmountToCall(_pokerTable.getPot()) != 0)
+            if (_pokerTable[_pokerTable.CurrentIndex].GetAmountToCall(_pokerTable.Pot) != 0)
             {
-                _pokerTable[0].Call(_pokerTable.getPot());
+                _pokerTable[0].Call(_pokerTable.Pot);
             }
             else
             { 
-                _pokerTable[0].Check(_pokerTable.getPot());
+                _pokerTable[0].Check(_pokerTable.Pot);
             }                
             UpdateMove();
             HideButtons();
@@ -410,7 +409,7 @@ namespace TexasHoldem.UI
             lblRaiseAmount.Show();
             nudBetRaise.Show();
             tbRaise.Show();
-            if (_pokerTable[_pokerTable.getCurrentIndex()].GetAmountToCall(_pokerTable.getPot()) == 0)
+            if (_pokerTable[_pokerTable.CurrentIndex].GetAmountToCall(_pokerTable.Pot) == 0)
             {
                 lblRaiseAmount.Text = "Bet Amount: ";
             }
@@ -418,24 +417,24 @@ namespace TexasHoldem.UI
             {
                 lblRaiseAmount.Text = "Raise Amount: ";
             }
-            SetBetAmounts(_pokerTable.getPot().MinimumRaise, (_pokerTable[0].ChipStack - _pokerTable[0].GetAmountToCall(_pokerTable.getPot())));            
+            SetBetAmounts(_pokerTable.Pot.MinimumRaise, (_pokerTable[0].ChipStack - _pokerTable[0].GetAmountToCall(_pokerTable.Pot)));            
         }
         private void btnAllIn_Click(object sender, EventArgs e)
         {
-            _pokerTable[0].AllIn(_pokerTable.getPot(), _pokerTable.decrementIndex(_pokerTable.getCurrentIndex()));
+            _pokerTable[0].AllIn(_pokerTable.Pot, _pokerTable.DecrementIndex(_pokerTable.CurrentIndex));
             UpdateMove();
             HideButtons();
             timerNextMove.Start();
         }
         private void btnOK_Click(object sender, EventArgs e)
         {
-            if (_pokerTable[_pokerTable.getCurrentIndex()].GetAmountToCall(_pokerTable.getPot()) != 0)
+            if (_pokerTable[_pokerTable.CurrentIndex].GetAmountToCall(_pokerTable.Pot) != 0)
             {
-                _pokerTable[0].Raise(Convert.ToInt32(nudBetRaise.Value), _pokerTable.getPot(), _pokerTable.decrementIndex(_pokerTable.getCurrentIndex()));
+                _pokerTable[0].Raise(Convert.ToInt32(nudBetRaise.Value), _pokerTable.Pot, _pokerTable.DecrementIndex(_pokerTable.CurrentIndex));
             }
             else
             {
-                _pokerTable[0].Bet(Convert.ToInt32(nudBetRaise.Value), _pokerTable.getPot(), _pokerTable.decrementIndex(_pokerTable.getCurrentIndex()));
+                _pokerTable[0].Bet(Convert.ToInt32(nudBetRaise.Value), _pokerTable.Pot, _pokerTable.DecrementIndex(_pokerTable.CurrentIndex));
             }    
             UpdateMove();
             HideButtons();
@@ -471,17 +470,17 @@ namespace TexasHoldem.UI
             if (_pokerTable.PlayerWon())
             {
                 panelBubble.Hide();
-                _pokerTable.setCurrentIndex(_pokerTable.incrementIndexShowdown(_pokerTable.getCurrentIndex()));
-                _pokerTable[_pokerTable.getCurrentIndex()].CollectMoney(_pokerTable.getPot());
-                lblBanner.Text = _pokerTable[_pokerTable.getCurrentIndex()].Message;
+                _pokerTable.CurrentIndex = _pokerTable.IncrementIndexShowdown(_pokerTable.CurrentIndex);
+                _pokerTable[_pokerTable.CurrentIndex].CollectMoney(_pokerTable.Pot);
+                lblBanner.Text = _pokerTable[_pokerTable.CurrentIndex].Message;
                 lblBanner.Show();
                 timerNextMove.Stop();
                 timerWait3Seconds.Start();
                 return;
             }
-            if (_pokerTable.beginNextTurn())
+            if (_pokerTable.BeginNextTurn())
             {
-                _pokerTable.setCurrentIndex(_pokerTable.incrementIndex(_pokerTable.getCurrentIndex()));
+                _pokerTable.CurrentIndex = _pokerTable.IncrementIndex(_pokerTable.CurrentIndex);
                 lblBanner.Hide();
                 if (timerCount == 1)
                 {
@@ -491,7 +490,7 @@ namespace TexasHoldem.UI
                 {
                     _pokerTable.PayBigBlind();
                 }
-                else if (_pokerTable.getCurrentIndex() == 0)
+                else if (_pokerTable.CurrentIndex == 0)
                 {
                     InitalizeButtons();
                     timerNextMove.Stop();
@@ -499,12 +498,12 @@ namespace TexasHoldem.UI
                 }
                 else
                 {
-                    AIPlayer currentPlayer = (AIPlayer)_pokerTable[_pokerTable.getCurrentIndex()];
-                    currentPlayer.MakeADecision(_pokerTable.getPot(), _pokerTable.decrementIndex(_pokerTable.getCurrentIndex()));
-                    _pokerTable[_pokerTable.getCurrentIndex()] = currentPlayer;
+                    AIPlayer currentPlayer = (AIPlayer)_pokerTable[_pokerTable.CurrentIndex];
+                    currentPlayer.MakeADecision(_pokerTable.Pot, _pokerTable.DecrementIndex(_pokerTable.CurrentIndex));
+                    _pokerTable[_pokerTable.CurrentIndex] = currentPlayer;
                     if (currentPlayer.Folded)
                     { 
-                        _panelList[_pokerTable.getCurrentIndex()].BackgroundImage = Image.FromFile("inactivebutton.png");
+                        _panelList[_pokerTable.CurrentIndex].BackgroundImage = Image.FromFile("inactivebutton.png");
                     }
                 }
                 UpdateMove();
@@ -539,9 +538,9 @@ namespace TexasHoldem.UI
                     timerShowdown.Start();
                     return;
                 }
-                int dealerPosition = _pokerTable.getDealerPosition();
-                _pokerTable.setCurrentIndex(_pokerTable.getDealerPosition());
-                _pokerTable.getPot().AgressorIndex = _pokerTable.getDealerPosition();
+                int dealerPosition = _pokerTable.DealerPosition;
+                _pokerTable.CurrentIndex = _pokerTable.DealerPosition;
+                _pokerTable.Pot.AgressorIndex = _pokerTable.DealerPosition;
                 DrawToScreen();
             }
         }        
@@ -560,26 +559,26 @@ namespace TexasHoldem.UI
         private void timerShowdown_Tick(object sender, EventArgs e)
         {
             showdownCount++;
-            if (showdownCount > _pokerTable.getPot().getPlayersInPot().Count)
+            if (showdownCount > _pokerTable.Pot.PlayersInPot.Count)
             {
-                for (int i = 0; i < _pokerTable[_pokerTable.getCurrentIndex()].Hand.Count; i++)
+                for (int i = 0; i < _pokerTable[_pokerTable.CurrentIndex].Hand.Count; i++)
                 { 
-                    _pokerTable[_pokerTable.getCurrentIndex()].Hand[i].UnHighlight();
+                    _pokerTable[_pokerTable.CurrentIndex].Hand[i].UnHighlight();
                 }
                 DrawToScreen();
                 _pokerTable.ShowDown();
-                lblBanner.Text = _pokerTable.winnermessage;
+                lblBanner.Text = _pokerTable.WinnerMessage;
                 timerShowdown.Stop();
                 timerWait3Seconds.Start();
             }
             else
             {
-                for (int i = 0; i < _pokerTable[_pokerTable.getCurrentIndex()].Hand.Count; i++)
+                for (int i = 0; i < _pokerTable[_pokerTable.CurrentIndex].Hand.Count; i++)
                 { 
-                     _pokerTable[_pokerTable.getCurrentIndex()].Hand[i].UnHighlight();
+                     _pokerTable[_pokerTable.CurrentIndex].Hand[i].UnHighlight();
                 }
-                int currentIndex = _pokerTable.incrementIndexShowdown(_pokerTable.getCurrentIndex());
-                _pokerTable.setCurrentIndex(currentIndex);
+                int currentIndex = _pokerTable.IncrementIndexShowdown(_pokerTable.CurrentIndex);
+                _pokerTable.CurrentIndex = currentIndex;
                 _pokerTable[currentIndex].Hand[0].FaceUp = true;
                 _pokerTable[currentIndex].Hand[1].FaceUp = true;
                 Hand bestHand = HandCombination.EvaluateHand(new Hand(_pokerTable[currentIndex].Hand));
