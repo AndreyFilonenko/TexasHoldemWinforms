@@ -25,7 +25,7 @@ namespace TexasHoldem.Logic
         #endregion
 
         #region Методы
-        public static string rankToString(RANK rank)
+        public static string RankToString(RANK rank)
         {
             string strOut = "";
             switch (rank)
@@ -48,7 +48,7 @@ namespace TexasHoldem.Logic
             }
             return strOut;
         }
-        public static string suitToString(SUIT suit)
+        public static string SuitToString(SUIT suit)
         {
             string strOut = "";
             switch (suit)
@@ -70,7 +70,7 @@ namespace TexasHoldem.Logic
             }
             return strOut;
         }
-        private void getImageFromFile()
+        private void GetImageFromFile()
         {
             if (_bFaceUp)
             {
@@ -78,14 +78,14 @@ namespace TexasHoldem.Logic
             }
             else
             { 
-                this.Image = new Bitmap("Cards\\sb.bmp");
+                this.Image = new Bitmap("Cards\\bb.png");
             } 
         }
-        public Bitmap getImage()
+        public Bitmap GetImage()
         {
             if (Image == null)
             { 
-                getImageFromFile();
+                GetImageFromFile();
             }  
             return this.Image;
         }
@@ -93,7 +93,7 @@ namespace TexasHoldem.Logic
         {
             if (_bFaceUp == true)
             { 
-                return rankToString(_rank) + " of " + suitToString(_suit);
+                return RankToString(_rank) + " of " + SuitToString(_suit);
             }
             return "The card is facedown, you cannot see it!";
         }
@@ -113,7 +113,7 @@ namespace TexasHoldem.Logic
             }
             if (this.Image == null)
             { 
-                getImageFromFile();
+                GetImageFromFile();
             }
             Bitmap HighlightedBitmap = new Bitmap(Image.Width, Image.Height);
             for (int i = 0; i < Image.Width; i++)
@@ -132,7 +132,7 @@ namespace TexasHoldem.Logic
             { 
                 return;
             }
-            getImageFromFile();
+            GetImageFromFile();
         }
         #endregion
 
@@ -215,7 +215,7 @@ namespace TexasHoldem.Logic
             set 
             { 
                 _bFaceUp = value;
-                getImageFromFile();
+                GetImageFromFile();
             }
         }
         public RANK Rank

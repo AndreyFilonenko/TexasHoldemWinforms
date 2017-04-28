@@ -66,7 +66,7 @@ namespace TexasHoldem.Logic
                 AllIn(mainPot, index);
                 return;
             }
-            Message = "Pay blind of " + amount.ToString("c0");
+            Message = "Pay blind of " + amount.ToString();
             ChipStack -= amount;
             _iAmountInPot += amount;
             mainPot.Add(amount);
@@ -104,7 +104,7 @@ namespace TexasHoldem.Logic
             _iAmountInPot += amount;
             mainPot.Add(amount);
             mainPot.AddPlayer(this);
-            Message = "Call " + amount.ToString("c0");
+            Message = "Call " + amount.ToString();
             SimplifiedMessage = "CALL " + amount;
         }
         public void Raise(int raise, Pot mainPot, int index)
@@ -121,7 +121,7 @@ namespace TexasHoldem.Logic
             mainPot.MaximumAmount = _iAmountInPot;
             mainPot.AddPlayer(this);
             mainPot.MinimumRaise = raise;
-            Message = "Call " + (amount - raise).ToString("c0") + " and raise " + raise.ToString("c0");
+            Message = "Call " + (amount - raise).ToString() + " and raise " + raise.ToString();
             SimplifiedMessage = "RAISE " + (amount - raise);
             mainPot.AgressorIndex = index;
         }
@@ -137,7 +137,7 @@ namespace TexasHoldem.Logic
             mainPot.Add(bet);
             mainPot.MaximumAmount = _iAmountInPot;
             mainPot.MinimumRaise = bet;
-            Message = "Bet " + bet.ToString("c0");
+            Message = "Bet " + bet.ToString();
             SimplifiedMessage = "BET " + bet;
             mainPot.AgressorIndex = index;
         }

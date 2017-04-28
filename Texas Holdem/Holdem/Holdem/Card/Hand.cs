@@ -55,31 +55,31 @@ namespace TexasHoldem.Logic
             switch (this._handValue[0])
             {
                 case 1:
-                    strOut = Card.rankToString((RANK)_handValue[1]) + " High";
+                    strOut = Card.RankToString((RANK)_handValue[1]) + " High";
                     break;
                 case 2:
-                    strOut = "Pair of " + Card.rankToString((RANK)_handValue[1]) + "s";
+                    strOut = "Pair of " + Card.RankToString((RANK)_handValue[1]) + "s";
                     break;
                 case 3:
-                    strOut = "Two Pair: " + Card.rankToString((RANK)_handValue[1]) + "s over " + Card.rankToString((RANK)_handValue[2]) + "s";
+                    strOut = "Two Pair: " + Card.RankToString((RANK)_handValue[1]) + "s over " + Card.RankToString((RANK)_handValue[2]) + "s";
                     break;
                 case 4:
-                    strOut = "Three " + Card.rankToString((RANK)_handValue[1]) + "s";
+                    strOut = "Three " + Card.RankToString((RANK)_handValue[1]) + "s";
                     break;
                 case 5:
-                    strOut = Card.rankToString((RANK)_handValue[1]) + " High Straight";
+                    strOut = Card.RankToString((RANK)_handValue[1]) + " High Straight";
                     break;
                 case 6:
-                    strOut = Card.rankToString((RANK)_handValue[1]) + " High Flush";
+                    strOut = Card.RankToString((RANK)_handValue[1]) + " High Flush";
                     break;
                 case 7:
-                    strOut = Card.rankToString((RANK)_handValue[1]) + "s Full of " + Card.rankToString((RANK)_handValue[2]) + "s";
+                    strOut = Card.RankToString((RANK)_handValue[1]) + "s Full of " + Card.RankToString((RANK)_handValue[2]) + "s";
                     break;
                 case 8:
-                    strOut = "Quad " + Card.rankToString((RANK)_handValue[1]) + "s";
+                    strOut = "Quad " + Card.RankToString((RANK)_handValue[1]) + "s";
                     break;
                 case 9:
-                    strOut = Card.rankToString((RANK)_handValue[1]) + " High Straight Flush";
+                    strOut = Card.RankToString((RANK)_handValue[1]) + " High Straight Flush";
                     break;
                 case 10:
                     strOut = "Royal Flush";

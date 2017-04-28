@@ -134,7 +134,7 @@ namespace TexasHoldem.UI
             {
                 if (_pokerTable[i / 2]._bBusted)
                     continue;
-                _g.DrawImage(_pokerTable[i / 2].Hand[i % 2].getImage(), _holeCardPosition[i]);
+                _g.DrawImage(_pokerTable[i / 2].Hand[i % 2].GetImage(), _holeCardPosition[i]);
             }
             pbDealer.Location = new Point(_panelList[_pokerTable.DealerPosition].Location.X - Convert.ToInt32(60 * width_ratio), _panelList[_pokerTable.DealerPosition].Location.Y - Convert.ToInt32(15 * height_ratio));
 
@@ -142,14 +142,14 @@ namespace TexasHoldem.UI
             {
                 for (int i = 0; i < 3; i++)
                 {
-                    _g.DrawImage(_pokerTable.CommunityCards[i].getImage(), _flopPositions[i]);
+                    _g.DrawImage(_pokerTable.CommunityCards[i].GetImage(), _flopPositions[i]);
                 }
 
                 if (_pokerTable[0].Hand.Count > 5)
                 {
-                    _g.DrawImage(_pokerTable.CommunityCards[3].getImage(), _turnPosition);
+                    _g.DrawImage(_pokerTable.CommunityCards[3].GetImage(), _turnPosition);
                     if (_pokerTable[0].Hand.Count > 6)
-                        _g.DrawImage(_pokerTable.CommunityCards[4].getImage(), _riverPosition);
+                        _g.DrawImage(_pokerTable.CommunityCards[4].GetImage(), _riverPosition);
                 }
             }
             pbMain.Image = _bitmap;
